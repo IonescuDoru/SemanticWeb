@@ -31,25 +31,56 @@ else if (searchResult is not null)
     }
     else
     {
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>Book Id</th>
-                    <th>Scor</th>
-                    <th>Motiv</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var item in searchResult)
-                {
-                    <tr>
-                        <td>@item.Ind</td>
-                        <td>@item.Scor</td>
-                        <td>@item.Motiv</td>
-                    </tr>
-                }
-            </tbody>
-        </table>
+        <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-3 mt-2">
+            @foreach (var item in searchResult)
+            {
+                <div class="col">
+                    <a class="card book-card h-100 shadow-sm text-decoration-none text-reset"
+                       href="@item.Link" target="_blank" rel="noopener noreferrer">
+                        <div class="row g-0 h-100">
+                            <div class="col-4 d-flex align-items-start justify-content-center p-2">
+                                @if (!string.IsNullOrWhiteSpace(item.Photo))
+                                {
+                                    <img src="@item.Photo" class="img-fluid rounded" alt="@item.Title" loading="lazy" />
+                                }
+                                else
+                                {
+                                    <div class="bg-light text-muted d-flex align-items-center justify-content-center rounded w-100" style="min-height: 120px;">
+                                        <small>No cover</small>
+                                    </div>
+                                }
+                            </div>
+                            <div class="col-8">
+                                <div class="card-body d-flex flex-column h-100 py-2">
+                                    <h6 class="card-title mb-1">@(string.IsNullOrWhiteSpace(item.Title) ? "(untitled)" : item.Title)</h6>
+                                    @if (!string.IsNullOrWhiteSpace(item.Author))
+                                    {
+                                        <p class="card-subtitle text-muted small mb-2">@item.Author</p>
+                                    }
+                                    <ul class="list-unstyled small mb-2">
+                                        @if (!string.IsNullOrWhiteSpace(item.Publisher))
+                                        {
+                                            <li><span class="text-muted">Publisher:</span> @item.Publisher</li>
+                                        }
+                                        @if (!string.IsNullOrWhiteSpace(item.Year))
+                                        {
+                                            <li><span class="text-muted">Year:</span> @item.Year</li>
+                                        }
+                                        @if (!string.IsNullOrWhiteSpace(item.Isbn))
+                                        {
+                                            <li><span class="text-muted">ISBN:</span> @item.Isbn</li>
+                                        }
+                                    </ul>
+                                    <div class="mt-auto">
+                                        <span class="badge text-bg-primary">Scor: @item.Scor.ToString("0.###")</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            }
+        </div>
     }
 }
 

@@ -18,8 +18,9 @@ public class RezultatItem
 
     public string? Isbn { get; set; }
 
-    //public string? Price { get; set; }    
+    // public string? Price { get; set; }    
 
-    public double Scor { get; set; }  
+    public double Scor { get; set; }
+    public string Link => $"https://www.librarie.net/p/{Ind}";
 }
 
