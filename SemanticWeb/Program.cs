@@ -2,6 +2,13 @@ using SemanticWeb.Components;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Render (and similar hosts) provide the port to listen on via the PORT environment variable.
+var port = Environment.GetEnvironmentVariable("PORT");
+if (!string.IsNullOrEmpty(port))
+{
+    builder.WebHost.UseUrls($"http://+:{port}");
+}
+
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
@@ -16,7 +23,12 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 app.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages: true);
-app.UseHttpsRedirection();
+if (string.IsNullOrEmpty(port))
+{
+    // Render terminates TLS at its edge proxy and forwards plain HTTP to the container,
+    // so redirecting to HTTPS inside the app would cause a redirect loop.
+    app.UseHttpsRedirection();
+}
 
 app.UseAntiforgery();
 
