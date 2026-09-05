@@ -1,7 +1,85 @@
 ﻿@page "/"
+@rendermode InteractiveServer
+@using System.Net.Http
+@using System.Net.Http.Json
+@using SemanticWeb.Models
+@inject IHttpClientFactory HttpClientFactory
 
-<PageTitle>Home</PageTitle>
+<PageTitle>Semantic Search</PageTitle>
 
-<h1>Hello, world!</h1>
+<h1 class="text-center">Semantic Search</h1>
+<br />
+<br />
+<div class="d-flex">
+    <button class="btn btn-primary me-2" @onclick="Search" disabled="@isSearching">Search</button>
+    <input type="text" class="form-control" placeholder="Enter search text" @bind="searchText" @bind:event="oninput" />
+</div>
 
-Welcome to your new app.
+@if (isSearching)
+{
+    <p><em>Searching...</em></p>
+}
+else if (errorMessage is not null)
+{
+    <p class="text-danger">@errorMessage</p>
+}
+else if (searchResult is not null)
+{
+    @if (searchResult.Count == 0)
+    {
+        <p><em>No results found.</em></p>
+    }
+    else
+    {
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Book Id</th>
+                    <th>Scor</th>
+                    <th>Motiv</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in searchResult)
+                {
+                    <tr>
+                        <td>@item.BookId</td>
+                        <td>@item.Scor</td>
+                        <td>@item.Motiv</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+}
+
+@code {
+    private string searchText = string.Empty;
+    private List<RezultatItem>? searchResult;
+    private string? errorMessage;
+    private bool isSearching;
+
+    private async Task Search()
+    {
+        isSearching = true;
+        errorMessage = null;
+        searchResult = null;
+
+        try
+        {
+            var client = HttpClientFactory.CreateClient("BookSearch");
+            var url = $"BookSearch/Details?inputText={Uri.EscapeDataString(searchText)}";
+            searchResult = await client.GetFromJsonAsync<List<RezultatItem>>(url);
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Search failed: {ex.Message}";
+        }
+        finally
+        {
+            isSearching = false;
+        }
+    }
+}
+
+

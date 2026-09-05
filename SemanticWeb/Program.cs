@@ -13,6 +13,11 @@ if (!string.IsNullOrEmpty(port))
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
+builder.Services.AddHttpClient("BookSearch", client =>
+{
+    client.BaseAddress = new Uri("https://semanticsearch-gzah.onrender.com/");
+});
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
