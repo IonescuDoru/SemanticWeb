@@ -4,12 +4,22 @@ namespace SemanticWeb.Models;
 
 public class RezultatItem
 {
-    [JsonPropertyName("bookId")]
-    public int BookId { get; set; }
+    public int Ind { get; set; }
 
-    [JsonPropertyName("scor")]
-    public double Scor { get; set; }
+    public string? Title { get; set; }
 
-    [JsonPropertyName("motiv")]
-    public string? Motiv { get; set; }
+    public string? Author { get; set; }
+
+    public string? Publisher { get; set; }
+
+    public string? Year { get; set; }
+
+    public string? Photo { get; set; }
+
+    public string? Isbn { get; set; }
+
+    //public string? Price { get; set; }    
+
+    public double Scor { get; set; }  
 }
+
