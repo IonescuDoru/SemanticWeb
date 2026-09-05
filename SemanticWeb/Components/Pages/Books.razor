@@ -1,7 +1,141 @@
 ﻿@page "/books"
-@attribute [StreamRendering]
+@rendermode InteractiveServer
+@using SemanticWeb.Models
+@inject IHttpClientFactory HttpClientFactory
+@inject NavigationManager Navigation
 
 <PageTitle>Books</PageTitle>
 
+<h1 class="text-center">Books</h1>
 
+<div class="d-flex align-items-center gap-2 mt-3">
+    <label class="text-muted small mb-0" for="pageSize">Per page</label>
+    <select id="pageSize" class="form-select form-select-sm w-auto" value="@pageSize" @onchange="OnPageSizeChanged">
+        @foreach (var size in PageSizes)
+        {
+            <option value="@size">@size</option>
+        }
+    </select>
+    <span class="text-muted small ms-auto">Page @currentPage</span>
+</div>
 
+@if (isLoading)
+{
+    <p><em>Loading...</em></p>
+}
+else if (errorMessage is not null)
+{
+    <p class="text-danger">@errorMessage</p>
+}
+else if (books is null || books.Count == 0)
+{
+    <p><em>No books on this page.</em></p>
+}
+else
+{
+    <BookGrid Items="books" />
+}
+
+<nav class="d-flex justify-content-center mt-4" aria-label="Book pages">
+    <ul class="pagination mb-0">
+        <li class="page-item @(currentPage <= 1 || isLoading ? "disabled" : null)">
+            <button type="button" class="page-link" @onclick="() => GoTo(1)">&laquo;</button>
+        </li>
+        <li class="page-item @(currentPage <= 1 || isLoading ? "disabled" : null)">
+            <button type="button" class="page-link" @onclick="() => GoTo(currentPage - 1)">Prev</button>
+        </li>
+
+        @foreach (var p in NearbyPages())
+        {
+            <li class="page-item @(p == currentPage ? "active" : null)">
+                <button type="button" class="page-link" disabled="@isLoading" @onclick="() => GoTo(p)">@p</button>
+            </li>
+        }
+
+        <li class="page-item @(isLastPage || isLoading ? "disabled" : null)">
+            <button type="button" class="page-link" @onclick="() => GoTo(currentPage + 1)">Next</button>
+        </li>
+    </ul>
+</nav>
+
+@code {
+    private static readonly int[] PageSizes = [10, 20, 50];
+
+    // The API returns a bare array with no total count, so the last page is only
+    // recognisable by a short (or empty) result.
+    [SupplyParameterFromQuery(Name = "page")]
+    public int? PageParam { get; set; }
+
+    [SupplyParameterFromQuery(Name = "pageSize")]
+    public int? PageSizeParam { get; set; }
+
+    private int currentPage = 1;
+    private int pageSize = 10;
+    private List<RezultatItem>? books;
+    private string? errorMessage;
+    private bool isLoading;
+    private bool isLastPage;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        currentPage = PageParam is > 0 ? PageParam.Value : 1;
+        pageSize = PageSizeParam is int s && PageSizes.Contains(s) ? s : 10;
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        isLoading = true;
+        errorMessage = null;
+
+        try
+        {
+            var client = HttpClientFactory.CreateClient("BookSearch");
+            var url = $"BookSearch/All?page={currentPage}&pageSize={pageSize}";
+            books = await client.GetFromJsonAsync<List<RezultatItem>>(url) ?? [];
+            isLastPage = books.Count < pageSize;
+        }
+        catch (Exception ex)
+        {
+            books = null;
+            isLastPage = true;
+            errorMessage = $"Could not load books: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private IEnumerable<int> NearbyPages()
+    {
+        var first = Math.Max(1, currentPage - 2);
+        var last = isLastPage ? currentPage : currentPage + 2;
+        for (var p = first; p <= last; p++)
+        {
+            yield return p;
+        }
+    }
+
+    private void GoTo(int target)
+    {
+        if (target < 1 || target == currentPage)
+        {
+            return;
+        }
+
+        Navigate(target, pageSize);
+    }
+
+    private void OnPageSizeChanged(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out var size) && size != pageSize)
+        {
+            // A different page size invalidates the current offset, so start over.
+            Navigate(1, size);
+        }
+    }
+
+    private void Navigate(int targetPage, int targetPageSize) =>
+        Navigation.NavigateTo($"/books?page={targetPage}&pageSize={targetPageSize}");
+}

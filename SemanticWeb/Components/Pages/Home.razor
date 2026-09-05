@@ -1,7 +1,5 @@
-﻿@page "/"
+@page "/"
 @rendermode InteractiveServer
-@using System.Net.Http
-@using System.Net.Http.Json
 @using SemanticWeb.Models
 @inject IHttpClientFactory HttpClientFactory
 
@@ -12,7 +10,8 @@
 <br />
 <div class="d-flex">
     <button class="btn btn-primary me-2" @onclick="Search" disabled="@isSearching">Search</button>
-    <input type="text" class="form-control" placeholder="Enter search text" @bind="searchText" @bind:event="oninput" />
+    <input type="text" class="form-control" placeholder="Enter search text"
+           @bind="searchText" @bind:event="oninput" @onkeydown="OnKeyDown" />
 </div>
 
 @if (isSearching)
@@ -31,56 +30,7 @@ else if (searchResult is not null)
     }
     else
     {
-        <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-3 mt-2">
-            @foreach (var item in searchResult)
-            {
-                <div class="col">
-                    <a class="card book-card h-100 shadow-sm text-decoration-none text-reset"
-                       href="@item.Link" target="_blank" rel="noopener noreferrer">
-                        <div class="row g-0 h-100">
-                            <div class="col-4 d-flex align-items-start justify-content-center p-2">
-                                @if (!string.IsNullOrWhiteSpace(item.Photo))
-                                {
-                                    <img src="@item.Photo" class="img-fluid rounded" alt="@item.Title" loading="lazy" />
-                                }
-                                else
-                                {
-                                    <div class="bg-light text-muted d-flex align-items-center justify-content-center rounded w-100" style="min-height: 120px;">
-                                        <small>No cover</small>
-                                    </div>
-                                }
-                            </div>
-                            <div class="col-8">
-                                <div class="card-body d-flex flex-column h-100 py-2">
-                                    <h6 class="card-title mb-1">@(string.IsNullOrWhiteSpace(item.Title) ? "(untitled)" : item.Title)</h6>
-                                    @if (!string.IsNullOrWhiteSpace(item.Author))
-                                    {
-                                        <p class="card-subtitle text-muted small mb-2">@item.Author</p>
-                                    }
-                                    <ul class="list-unstyled small mb-2">
-                                        @if (!string.IsNullOrWhiteSpace(item.Publisher))
-                                        {
-                                            <li><span class="text-muted">Publisher:</span> @item.Publisher</li>
-                                        }
-                                        @if (!string.IsNullOrWhiteSpace(item.Year))
-                                        {
-                                            <li><span class="text-muted">Year:</span> @item.Year</li>
-                                        }
-                                        @if (!string.IsNullOrWhiteSpace(item.Isbn))
-                                        {
-                                            <li><span class="text-muted">ISBN:</span> @item.Isbn</li>
-                                        }
-                                    </ul>
-                                    <div class="mt-auto">
-                                        <span class="badge text-bg-primary score-badge">Scor: @item.Scor.ToString("0.###")</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </a>
-                </div>
-            }
-        </div>
+        <BookGrid Items="searchResult" ShowScore="true" />
     }
 }
 
@@ -89,6 +39,14 @@ else if (searchResult is not null)
     private List<RezultatItem>? searchResult;
     private string? errorMessage;
     private bool isSearching;
+
+    private async Task OnKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter" && !isSearching)
+        {
+            await Search();
+        }
+    }
 
     private async Task Search()
     {
@@ -112,5 +70,3 @@ else if (searchResult is not null)
         }
     }
 }
-
-
